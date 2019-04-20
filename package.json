@@ -1,0 +1,29 @@
+{
+  "name": "Faux-News",
+  "version": "1.0.0",
+  "description": "A news scraper app using MongoDB/Mongoose",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "watch": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/doyBrian/Faux-News.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/doyBrian/Faux-News/issues"
+  },
+  "homepage": "https://github.com/doyBrian/Faux-News#readme",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "cheerio": "^1.0.0-rc.3",
+    "express": "^4.16.4",
+    "express-handlebars": "^3.0.2",
+    "mongoose": "^5.5.2"
+  }
+}
