@@ -77,7 +77,6 @@ app.get("/scrape", function(req, res) {
               console.log(err);
             });
       });
-      res.render("index", {articles: dbArticle});
     });
   });
 
@@ -85,11 +84,28 @@ app.get("/scrape", function(req, res) {
 app.get("/", function(req, res) {
   // Grab every document in the Articles collection
   db.Article.find().sort({_id: -1})
-  .populate("comment")
     .then(function(dbArticle) {
       // If we were able to successfully find Articles, send them back to the client
       //res.json(dbArticle);
+      console.log(dbArticle);
       res.render("index", {articles: dbArticle});
+    })
+    .catch(function(err) {
+      // If an error occurred, send it to the client
+      res.json(err);
+    });
+});
+
+app.get("/comment/:id", function(req, res) {
+  // Create a new comment and pass the req.body to the entry
+  let id = req.params.id;
+  console.log(id);
+  db.Article.find({_id: id})
+    .populate("comment")
+    .then(function(dbArticle) {
+      // If we were able to successfully update an Article, send it back to the client
+      res.json(dbArticle);
+      console.log(dbArticle);
     })
     .catch(function(err) {
       // If an error occurred, send it to the client
@@ -111,6 +127,7 @@ app.post("/comment/:id", function(req, res) {
     .then(function(dbArticle) {
       // If we were able to successfully update an Article, send it back to the client
       res.json(dbArticle);
+      console.log(dbArticle);
     })
     .catch(function(err) {
       // If an error occurred, send it to the client
@@ -120,16 +137,12 @@ app.post("/comment/:id", function(req, res) {
 
 
 // Route for deleting an Article's associated Comment
-app.delete("/delete/:id1", function(req, res) {
+app.delete("/delete/:id", function(req, res) {
   // Delete comment using id2
-  db.Comment.remove({_id: req.params.id2})
+  db.Comment.deleteOne({_id: req.params.id})
     .then(function(dbComment) {
       //then delete associated comment in Article
-      return db.Article.remove({comment: req.params.id2 });
-    })
-    .then(function(dbArticle) {
-    
-      res.json(dbArticle);
+      console.log("delete successful");
     })
     .catch(function(err) {
       // If an error occurred, send it to the client

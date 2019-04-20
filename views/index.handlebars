@@ -10,6 +10,7 @@
         </div>
         <div class="row center">
           <a href="/scrape" id="scrape-button" class="btn-large waves-effect waves-light teal lighten-1">Scrape News</a>
+          <a href="/" class="btn-large waves-effect waves-light teal lighten-1">Load Files</a>
         </div>
     </div>
         <br><br>
@@ -29,7 +30,7 @@
                     <span class="card-title activator grey-text text-darken-4">{{title}}<i class="material-icons right">more_horiz</i></span>
                     <p><a href={{link}} target="blank">Full Article</a></p>          
                     <hr>
-                  <button data-target="modal1" class="btn modal-trigger">Write Comment</button>
+                  <a class="waves-effect waves-light btn modal-trigger" href="#modal1" data-id={{_id}}>Write Comment</a>
                   <!-- Modal Structure -->
                     <div id="modal1" class="modal">
                       <div class="modal-content">
@@ -47,21 +48,20 @@
                           </div>
                       </div>
                       <div class="modal-footer">
-                        <button id="submit" class="modal-close waves-effect waves-green btn-flat" data-id="{{this._id}}">Submit</button>
+                        <button id="submit" class="modal-close waves-effect waves-green btn-flat">Submit</button>
                       </div>
                     </div>
-                    <button data-target="modal2" class="btn modal-trigger" style="margin-top:5px">Read Comments</button>
+                    <a class="waves-effect waves-light btn modal-trigger" href="#modal2" style="margin-top:5px" data-id={{_id}}>Read Comments</a>
                   <!-- Modal Structure -->
                     <div id="modal2" class="modal">
                       <div class="modal-content">
                         <div class="row">
-                          <div class="col s6">
+                          <div id="comment_section" class="col s6">
                           </div>
                         </div>
- 
                       </div>
                       <div class="modal-footer">
-                        <a href="#" class="modal-close waves-effect waves-green btn-flat">Close</a>
+                        <button class="modal-close waves-effect waves-green btn-flat">Close</button>
                       </div>
                     </div>
 
@@ -76,38 +76,70 @@
             </div>
         </div>
       </div>
-      <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
   <script type="text/javascript">
 
 
   $('.modal-trigger').click(function(){
-    $('.modal').modal();
-  });
 
-  $(document).on("click", "#submit", function() {
-
-    var newComment = {
-      name: $("#name").val().trim(),
-      body: $("#comment").val().trim()
-    };
-    
     $("#name").val('');
     $("#comment").val('');
-
-    var id = $("#submit").attr("data-id");
+    
+    let id = $(this).attr("data-id");
     console.log(id);
 
+    // Send the get request for comments.
+    $.get("/comment/" + id).then(
+      function(data) {
+        let comments = [];
+        comments.push(data[0].comment);
+        console.log(comments);
 
-    // Send the POST request.
-    $.ajax("/comment/" + id, {
-      type: "POST",
-      data: newComment
-    }).then(
-      function() {
-        console.log("updated quote");
+        if (comments.length != 0) {
+        
+        $("#comment_section").empty();
+
+        for (let i=0; i < comments.length; i++)
+          $("#comment_section").append('<br><p>' + comments[i].name + ' wrote: ' + comments[i].body + '<button class="modal-close waves-effect waves-green btn-flat" id="delete" data-index=' + comments[i]._id + '><i class="material-icons">clear</i></button></p><hr>'); 
+        
+        $("#delete").click(function() {
+          let index = $(this).attr("data-index");
+          console.log(index);
+          
+          // Send the DELETE request.
+          $.ajax("/delete/" + index, {
+            type: "DELETE"
+          }).then(
+            function() {
+              console.log("deleted comment");
+              location.reload();
+            });
+        });   
+        }    
       });
 
+    $('.modal').modal();  //pushes out the modal
+
+    $("#submit").click(function() {
+        var newComment = {
+        name: $("#name").val().trim(),
+        body: $("#comment").val().trim()
+      };
+      
+      // Send the POST request.
+      $.ajax("/comment/" + id, {
+        type: "POST",
+        data: newComment
+      }).then(
+        function() {
+          console.log("updated quote");
+          location.reload();
+        });
+    });
+
   });
+
+
 
 
 </script>
