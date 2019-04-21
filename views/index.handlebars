@@ -99,7 +99,7 @@
         
         $("#comment_section").empty();
 
-        for (let i=0; i < comments.length; i++)
+        for (let i = 0; i < comments.length; i++)
           $("#comment_section").append('<br><p>' + comments[i].name + ' wrote: ' + comments[i].body + '<button class="modal-close waves-effect waves-green btn-flat" id="delete" data-index=' + comments[i]._id + '><i class="material-icons">clear</i></button></p><hr>'); 
         
         $("#delete").click(function() {
@@ -112,7 +112,6 @@
           }).then(
             function() {
               console.log("deleted comment");
-              location.reload();
             });
         });   
         }    
@@ -133,7 +132,6 @@
       }).then(
         function() {
           console.log("updated quote");
-          location.reload();
         });
     });
 
