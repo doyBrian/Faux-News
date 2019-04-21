@@ -30,8 +30,17 @@
                     <span class="card-title activator grey-text text-darken-4">{{title}}<i class="material-icons right">more_horiz</i></span>
                     <p><a href={{link}} target="blank">Full Article</a></p>          
                     <hr>
-                  <a class="waves-effect waves-light btn modal-trigger" href="#modal1" data-id={{_id}}>Write Comment</a>
-                  <!-- Modal Structure -->
+                  <a id="modal_1" class="waves-effect waves-light btn modal-trigger" href="#modal1" data-id={{_id}}>Write Comment</a>
+                    <a id="modal_2" class="waves-effect waves-light btn modal-trigger" href="#modal2" style="margin-top:5px" data-id={{_id}}>Read Comments</a>
+
+                  </div>
+                  <div class="card-reveal">
+                    <span class="card-title grey-text text-darken-4">Summary<i class="material-icons right">close</i></span>
+                    <p>{{summary}}</p>
+                  </div>
+                </div>
+ {{/each}}    
+ <!-- Modal Structure -->
                     <div id="modal1" class="modal">
                       <div class="modal-content">
                         <div class="row">
@@ -51,12 +60,13 @@
                         <button id="submit" class="modal-close waves-effect waves-green btn-flat">Submit</button>
                       </div>
                     </div>
-                    <a class="waves-effect waves-light btn modal-trigger" href="#modal2" style="margin-top:5px" data-id={{_id}}>Read Comments</a>
-                  <!-- Modal Structure -->
+
+                    <!-- Modal Structure -->
                     <div id="modal2" class="modal">
                       <div class="modal-content">
                         <div class="row">
                           <div id="comment_section" class="col s6">
+                            <!-- contents here -->       
                           </div>
                         </div>
                       </div>
@@ -65,83 +75,93 @@
                       </div>
                     </div>
 
-                  </div>
-                  <div class="card-reveal">
-                    <span class="card-title grey-text text-darken-4">Summary<i class="material-icons right">close</i></span>
-                    <p>{{summary}}</p>
-                  </div>
-                </div>
- {{/each}}
-
             </div>
         </div>
       </div>
+
   <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+<!-- Compiled and minified JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  
   <script type="text/javascript">
 
+  let id = '';
 
-  $('.modal-trigger').click(function(){
+$(document).ready(function(){
+    $('.modal').modal();
+  });
+
+
+$(document).on("click", "#modal_1", function() {
+
+    id = $(this).attr("data-id");
+    console.log(id);
 
     $("#name").val('');
     $("#comment").val('');
-    
-    let id = $(this).attr("data-id");
-    console.log(id);
-
-    // Send the get request for comments.
-    $.get("/comment/" + id).then(
-      function(data) {
-        let comments = [];
-        comments.push(data[0].comment);
-        console.log(comments);
-
-        if (comments.length != 0) {
-        
-        $("#comment_section").empty();
-
-        for (let i = 0; i < comments.length; i++)
-          $("#comment_section").append('<br><p>' + comments[i].name + ' wrote: ' + comments[i].body + '<button class="modal-close waves-effect waves-green btn-flat" id="delete" data-index=' + comments[i]._id + '><i class="material-icons">clear</i></button></p><hr>'); 
-        
-        $("#delete").click(function() {
-          let index = $(this).attr("data-index");
-          console.log(index);
-          
-          // Send the DELETE request.
-          $.ajax("/delete/" + index, {
-            type: "DELETE"
-          }).then(
-            function() {
-              console.log("deleted comment");
-            });
-        });   
-        }    
-      });
-
-    $('.modal').modal();  //pushes out the modal
-
-    $("#submit").click(function() {
-        var newComment = {
-        name: $("#name").val().trim(),
-        body: $("#comment").val().trim()
-      };
-      
-      // Send the POST request.
-      $.ajax("/comment/" + id, {
-        type: "POST",
-        data: newComment
-      }).then(
-        function() {
-          console.log("updated quote");
-        });
-    });
 
   });
 
 
+$(document).on("click", "#modal_2", function(){
 
+    id = $(this).attr("data-id");
+    console.log(id);
+
+    $("#comment_section").empty();
+
+    let posts = [];
+
+    // Send the get request for comments.
+    $.getJSON("/comment/" + id).then(
+      function(data) {     
+        posts.push(data[0].comments);
+        console.log(posts);
+
+      if (posts.length != 0) { 
+        for (let i = 0; i < posts.length; i++)
+          $("#comment_section").append('<br><p>' + posts[0].name + ' wrote: ' + posts[0].body + '<button class="modal-close waves-effect waves-green btn-flat" id="delete" data-index=' + posts[0]._id + '><i class="material-icons">clear</i></button></p><hr>'); 
+      }
+      else 
+        $("#comment_section").append('<p>No comments posted yet.</p>');
+    });
+
+  }); 
+
+
+$(document).on("click", "#delete", function() {
+
+  let index = $(this).attr("data-index");
+  console.log(index);
+  
+    // Send the DELETE request.
+    $.ajax("/delete/" + index, {
+      type: "DELETE"
+    }).then(function() {
+        console.log("deleted comment");
+        window.location.assign("/");
+    });
+   
+});
+  
+
+$(document).on("click", "#submit", function() {
+
+  var newComment = {
+    name: $("#name").val().trim(),
+    body: $("#comment").val().trim()
+  };
+  
+  // Send the POST request.
+  $.ajax("/comment/" + id, {
+    type: "POST",
+    data: newComment
+  }).then(
+    function() {
+      console.log("updated quote");
+    });
+});
 
 </script>
 
-   <!-- Compiled and minified JavaScript -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 

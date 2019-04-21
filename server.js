@@ -26,8 +26,8 @@ app.engine("handlebars", exphbs({ defaultLayout: "main" }));
 app.set("view engine", "handlebars");
 
 // Connect to the Mongo DB
-var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/news";
-mongoose.connect(MONGODB_URI);
+//var MONGODB_URI = "mongodb://<dbuser>:<dbpassword>@ds145356.mlab.com:45356/heroku_9dffjs4c" || "mongodb://localhost/news";
+mongoose.connect("mongodb://<dbuser>:<dbpassword>@ds145356.mlab.com:45356/heroku_9dffjs4c", {useNewUrlParser: true});
 
 //mongoose.connect("mongodb://localhost/news", { useNewUrlParser: true });
 
@@ -104,7 +104,7 @@ app.get("/comment/:id", function(req, res) {
   let id = req.params.id;
   console.log(id);
   db.Article.find({_id: id})
-    .populate("comment")
+    .populate("comments")
     .then(function(dbArticle) {
       // If we were able to successfully update an Article, send it back to the client
       res.json(dbArticle);
@@ -125,7 +125,7 @@ app.post("/comment/:id", function(req, res) {
       // If a Comment was created successfully, find one Article with an `_id` equal to `req.params.id`. Update the Article to be associated with the new Comment
       // { new: true } tells the query that we want it to return the updated Article -- it returns the original by default
       // Since our mongoose query returns a promise, we can chain another `.then` which receives the result of the query
-      return db.Article.update({ _id: id }, { $push: {comment: dbComment._id } });
+      return db.Article.update({ _id: id }, { $push: {comments: dbComment._id } });
     })
     .then(function(dbArticle) {
       // If we were able to successfully update an Article, send it back to the client
@@ -142,7 +142,7 @@ app.post("/comment/:id", function(req, res) {
 // Route for deleting an Article's associated Comment
 app.delete("/delete/:id", function(req, res) {
   // Delete comment using id2
-  db.Comment.deleteOne({_id: req.params.id})
+  db.Comment.findOneAndRemove({_id: req.params.id})
     .then(function(dbComment) {
       //then delete associated comment in Article
       console.log("delete successful");
