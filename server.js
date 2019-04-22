@@ -10,7 +10,7 @@ var cheerio = require("cheerio");
 // Require all models
 var db = require("./models");
 
-var PORT = 8080;
+var PORT = 3000;
 
 // Initialize Express
 var app = express();
@@ -26,12 +26,12 @@ app.engine("handlebars", exphbs({ defaultLayout: "main" }));
 app.set("view engine", "handlebars");
 
 // Connect to the Mongo DB
-//var MONGODB_URI = "mongodb://<dbuser>:<dbpassword>@ds145356.mlab.com:45356/heroku_9dffjs4c" || "mongodb://localhost/news";
-mongoose.connect("mongodb://<dbuser>:<dbpassword>@ds145356.mlab.com:45356/heroku_9dffjs4c", {useNewUrlParser: true});
+//var MONGODB_URI = "mongodb://doybrian:doyis40!@ds145356.mlab.com:45356/heroku_9dffjs4c" || "mongodb://localhost/news";
+
+var MONGODB_URI = "mongodb://user:password@ds145356.mlab.com:45356/heroku_9dffjs4c";
+mongoose.connect(MONGODB_URI);
 
 //mongoose.connect("mongodb://localhost/news", { useNewUrlParser: true });
-
-
 // Routes
 
 // A GET route for scraping the fox news website
@@ -84,9 +84,10 @@ app.get("/scrape", function(req, res) {
   });
 
 // Route for getting all Articles from the db
-app.get("/", function(req, res) {
+app.get("/", (req, res) => {
   // Grab every document in the Articles collection
   db.Article.find().sort({_id: -1})
+    .populate("comments")
     .then(function(dbArticle) {
       // If we were able to successfully find Articles, send them back to the client
       //res.json(dbArticle);
@@ -99,59 +100,60 @@ app.get("/", function(req, res) {
     });
 });
 
-app.get("/comment/:id", function(req, res) {
-  // Create a new comment and pass the req.body to the entry
+
+//route for getting a specific article, to use for displaying comments
+app.get("/comment/:id", async (req, res) => {
   let id = req.params.id;
-  console.log(id);
-  db.Article.find({_id: id})
-    .populate("comments")
-    .then(function(dbArticle) {
-      // If we were able to successfully update an Article, send it back to the client
-      res.json(dbArticle);
-      console.log(dbArticle);
-    })
-    .catch(function(err) {
-      // If an error occurred, send it to the client
-      res.json(err);
-    });
+
+  try {
+    const article = await db.Article.find({"_id": id}).populate("comments");
+    console.log(article);
+    res.json(article);
+
+  } catch(e)
+  {
+    res.json(e);
+  }
 });
 
-app.post("/comment/:id", function(req, res) {
+
+//route for posting new comments and associating each one to the article
+app.post("/comment/:id", async (req, res) => {
   // Create a new comment and pass the req.body to the entry
   let id = req.params.id;
   console.log(id);
-  db.Comment.create({name: req.body.name, body: req.body.body})
-    .then(function(dbComment) {
-      // If a Comment was created successfully, find one Article with an `_id` equal to `req.params.id`. Update the Article to be associated with the new Comment
-      // { new: true } tells the query that we want it to return the updated Article -- it returns the original by default
-      // Since our mongoose query returns a promise, we can chain another `.then` which receives the result of the query
-      return db.Article.update({ _id: id }, { $push: {comments: dbComment._id } });
-    })
-    .then(function(dbArticle) {
-      // If we were able to successfully update an Article, send it back to the client
-      res.json(dbArticle);
-      console.log(dbArticle);
-    })
-    .catch(function(err) {
-      // If an error occurred, send it to the client
-      res.json(err);
-    });
+
+  try {
+    const comment = await db.Comment.create(req.body);
+    console.log(comment);
+    try {
+      const article = await db.Article.update({ "_id": id }, {$push: {"comments": comment._id }});
+      res.json(article);
+      console.log(article);
+    } catch(e){
+      res.json(e);
+    }
+  } catch(e) {
+    res.json(e);
+  }
+  
 });
 
 
 // Route for deleting an Article's associated Comment
-app.delete("/delete/:id", function(req, res) {
+app.delete("/delete/:id1/:id2", (req, res) => {
   // Delete comment using id2
-  db.Comment.findOneAndRemove({_id: req.params.id})
+ db.Comment.deleteOne({"_id": req.params.id2 })
     .then(function(dbComment) {
-      //then delete associated comment in Article
-      console.log("delete successful");
-    })
-    .catch(function(err) {
+      return db.Article.findOneAndUpdate({"_id": req.params.id1}, {$pull: {"comments": req.params.id2}});
+    }).then(function(dbArticle){
+      console.log("delete successful!");
+    }).catch(function(err) {
       // If an error occurred, send it to the client
       res.json(err);
     });
-});
+  });
+
 
 
 // Start the server

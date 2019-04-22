@@ -66,7 +66,7 @@
                       <div class="modal-content">
                         <div class="row">
                           <div id="comment_section" class="col s6">
-                            <!-- contents here -->       
+                            <!-- contents here --><ul class="collection with-header"></ul>      
                           </div>
                         </div>
                       </div>
@@ -83,85 +83,91 @@
 <!-- Compiled and minified JavaScript -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   
-  <script type="text/javascript">
-
-  let id = '';
+<script type="text/javascript">
 
 $(document).ready(function(){
-    $('.modal').modal();
+
+  let id = '';
+    
+  //modal initialization
+  $('.modal').modal();
+
+
+  // submit comment form
+  $(document).on("click", "#modal_1", function() {
+
+      id = $(this).attr("data-id");
+      console.log(id);
+
+      $("#name").val('');
+      $("#comment").val('');
+
   });
 
+  //read comments modal section
+  $(document).on("click", "#modal_2", function(){
 
-$(document).on("click", "#modal_1", function() {
+      id = $(this).attr("data-id");
+      console.log(id);
 
-    id = $(this).attr("data-id");
-    console.log(id);
+      $(".collection").empty();
 
-    $("#name").val('');
-    $("#comment").val('');
+      let posts = [];
 
+      //Send the get request for comments.
+      $.get("/comment/" + id).then(
+        function(data) {    
+          posts.push(data[0].comments);
+          console.log(posts[0]);
+          let comments = posts[0];
+          
+      if (comments.length != 0) {
+        for (let i = 0; i < comments.length; i++) 
+          $(".collection").append('<li class="collection-item">' + comments[i].name + ' wrote: ' + comments[i].body + '<button class="modal-close waves-effect waves-green btn-flat" id="delete" data-index=' + comments[i]._id + '><i class="material-icons">clear</i></button></li?'); 
+      }else 
+          $(".collection").append('<p>No comments posted.</p>');
+
+      });
+
+    }); 
+
+  //for deleting comments
+  $(document).on("click", "#delete", function() {
+
+    let index = $(this).attr("data-index");
+    console.log(index);
+    
+      // Send the DELETE request.
+      $.ajax("/delete/" + id + "/"+ index, {
+        type: "DELETE"
+      }).then(function() {
+          console.log("deleted comment");
+          window.location.assign("/");
+      });
+    
+  });
+    
+
+  //for submitting comment and saving to database
+  $(document).on("click", "#submit", function() {
+
+    var newComment = {
+      name: $("#name").val().trim(),
+      body: $("#comment").val().trim()
+    };
+    
+    // Send the POST request.
+    $.ajax("/comment/" + id, {
+      type: "POST",
+      data: newComment
+    }).then(
+      function() {
+        console.log("updated quote");
+        //window.location.assign("/");
+      });
   });
 
-
-$(document).on("click", "#modal_2", function(){
-
-    id = $(this).attr("data-id");
-    console.log(id);
-
-    $("#comment_section").empty();
-
-    let posts = [];
-
-    // Send the get request for comments.
-    $.getJSON("/comment/" + id).then(
-      function(data) {     
-        posts.push(data[0].comments);
-        console.log(posts);
-
-      if (posts.length != 0) { 
-        for (let i = 0; i < posts.length; i++)
-          $("#comment_section").append('<br><p>' + posts[0].name + ' wrote: ' + posts[0].body + '<button class="modal-close waves-effect waves-green btn-flat" id="delete" data-index=' + posts[0]._id + '><i class="material-icons">clear</i></button></p><hr>'); 
-      }
-      else 
-        $("#comment_section").append('<p>No comments posted yet.</p>');
-    });
-
-  }); 
-
-
-$(document).on("click", "#delete", function() {
-
-  let index = $(this).attr("data-index");
-  console.log(index);
-  
-    // Send the DELETE request.
-    $.ajax("/delete/" + index, {
-      type: "DELETE"
-    }).then(function() {
-        console.log("deleted comment");
-        window.location.assign("/");
-    });
-   
 });
-  
-
-$(document).on("click", "#submit", function() {
-
-  var newComment = {
-    name: $("#name").val().trim(),
-    body: $("#comment").val().trim()
-  };
-  
-  // Send the POST request.
-  $.ajax("/comment/" + id, {
-    type: "POST",
-    data: newComment
-  }).then(
-    function() {
-      console.log("updated quote");
-    });
-});
-
 </script>
 
 
