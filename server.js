@@ -10,7 +10,7 @@ var cheerio = require("cheerio");
 // Require all models
 var db = require("./models");
 
-var PORT = 3000;
+var PORT = (process.env.PORT || 3000);
 
 // Initialize Express
 var app = express();
@@ -29,7 +29,7 @@ app.set("view engine", "handlebars");
 //var MONGODB_URI = "mongodb://doybrian:doyis40!@ds145356.mlab.com:45356/heroku_9dffjs4c" || "mongodb://localhost/news";
 
 var MONGODB_URI = "mongodb://user:myshit1@ds145356.mlab.com:45356/heroku_9dffjs4c";
-mongoose.connect(MONGODB_URI);
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/news");
 
 //mongoose.connect("mongodb://localhost/news", { useNewUrlParser: true });
 // Routes
